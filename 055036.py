@@ -36,7 +36,7 @@ st.markdown(
 st.header("Import Export Dashboard")
 
 # Load the dataset into df_uq
-file_path = r'C:\Users\rahul\Downloads\Imports_Exports_Dataset.csv'
+file_path = 'Imports_Exports_Dataset.csv'
 
 try:
     df_uq = pd.read_csv(file_path)
