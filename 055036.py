@@ -36,7 +36,7 @@ st.markdown(
 st.header("Import Export Dashboard")
 
 # Load the dataset into df_uq
-file_path = 'Imports_Exports_Dataset.csv'
+file_path = r'C:\Users\rahul\Downloads\Imports_Exports_Dataset.csv'
 
 try:
     df_uq = pd.read_csv(file_path)
@@ -63,67 +63,58 @@ try:
     if date_range:
         df_uq = df_uq[(df_uq['Date'] >= pd.Timestamp(date_range[0])) & (df_uq['Date'] <= pd.Timestamp(date_range[1]))]
 
-    # Adjust available filters based on chart type
-    if chart_type in ["Pie", "Bar"]:
-        # For Pie and Bar charts, show limited categorical options and set all as selected by default
-        default_selection = ['Shipping_Method', 'Import_Export', 'Payment_Terms', 'Category'] if chart_type == "Pie" else ['Shipping_Method', 'Import_Export', 'Payment_Terms']
-        selected_categorical_var = st.sidebar.multiselect(
-            'Select Categorical Variables for Visualization',
-            default_selection,  # All filters are selected by default
-            default=default_selection
-        )
-
-    elif chart_type == "Box":
-        # For Box plots, only allow 'Shipping_Method'
-        selected_categorical_var = st.sidebar.multiselect(
-            'Select Categorical Variables for Visualization',
-            ['Shipping_Method'],
-            default=['Shipping_Method']
-        )
-
-    elif chart_type == "Line":
-        # For Line chart, allow date and numeric filters
-        selected_numeric_var = st.sidebar.selectbox("Select Variable for Y-axis", ['Quantity', 'Value', 'Weight'])
-
-    elif chart_type == "Scatter":
-        # Scatter plot filters for numeric variables
-        selected_numeric_x = st.sidebar.selectbox('Select X-axis for Scatter Plot', numeric_options)
-        selected_numeric_y = st.sidebar.selectbox('Select Y-axis for Scatter Plot', numeric_options, index=1)
-
-    elif chart_type == "Heatmap":
-        # Heatmap allows selection of numeric variables only
-        selected_heatmap_vars = st.sidebar.multiselect('Select Numeric Variables for Heatmap', numeric_options, default=numeric_options)
-
-    elif chart_type == "Histogram":
-        # Histogram for a single numeric variable
-        selected_hist_var = st.sidebar.selectbox('Select Numeric Variable for Histogram', numeric_options)
-
     # Dynamic chart rendering based on the selected chart type
     if chart_type == "Pie":
-        st.write("### Categorical Variables - Pie Charts")
+        st.write("### Pie Charts for Shipping Method and Category")
         cols = st.columns(2)
-        for i, var in enumerate(selected_categorical_var):
-            with cols[i % 2]:  # Display two pie charts side by side
-                fig = px.pie(df_uq, names=var, title=f'Pie Chart of {var}')
-                fig.update_layout(paper_bgcolor="black", font_color="white", legend_font_color="white", title_font_color="white")
-                st.plotly_chart(fig)
-
-    elif chart_type == "Bar":
-        for var in selected_categorical_var:
-            st.write(f"### Bar Plot - {var}")
-            fig = px.bar(df_uq, x=var, title=f'Bar Plot of {var}')
+        with cols[0]:
+            fig = px.pie(df_uq, names='Shipping_Method', title='Pie Chart of Shipping Method')
             fig.update_layout(paper_bgcolor="black", font_color="white", legend_font_color="white", title_font_color="white")
             st.plotly_chart(fig)
 
+        with cols[1]:
+            fig = px.pie(df_uq, names='Category', title='Pie Chart of Category')
+            fig.update_layout(paper_bgcolor="black", font_color="white", legend_font_color="white", title_font_color="white")
+            st.plotly_chart(fig)
+
+    elif chart_type == "Bar":
+        st.write("### Bar Plot - Import/Export and Payment Terms")
+
+        # Get unique values for color assignment
+        import_export_colors = ['#DDA0DD', '#FFA07A']  # Light purple and light salmon for Import and Export
+        payment_terms_colors = px.colors.qualitative.Plotly[:len(df_uq['Payment_Terms'].unique())]  # Unique colors for payment terms
+
+        # Bar Plot for Import/Export
+        fig = px.bar(df_uq, x='Import_Export', color='Import_Export', title='Bar Plot of Import/Export',
+                     color_discrete_sequence=import_export_colors, barmode='group')
+        fig.update_layout(bargap=0.5, paper_bgcolor="black", font_color="white", legend_font_color="white", title_font_color="white")
+        st.plotly_chart(fig)
+
+        # Bar Plot for Payment Terms
+        fig = px.bar(df_uq, x='Payment_Terms', color='Payment_Terms', title='Bar Plot of Payment Terms',
+                     color_discrete_sequence=payment_terms_colors, barmode='group')
+        fig.update_layout(bargap=0.15, paper_bgcolor="black", font_color="white", legend_font_color="white", title_font_color="white")
+        st.plotly_chart(fig)
+
     elif chart_type == "Line":
-        st.write(f"### Line Chart - {selected_numeric_var} over Time")
-        fig = px.line(df_uq, x='Date', y=selected_numeric_var, title=f'Line Chart of {selected_numeric_var} over Time')
+        st.write("### Line Chart for Import and Export Over Time")
+        df_uq['Year'] = df_uq['Date'].dt.year  # Extract year from the date
+        
+        # Aggregate data for imports and exports
+        import_export_summary = df_uq.groupby(['Year', 'Import_Export']).agg({'Quantity': 'sum'}).reset_index()
+
+        # Plotly line chart with specific colors
+        fig = px.line(import_export_summary, x='Year', y='Quantity', color='Import_Export', 
+                      title='Line Chart of Imports and Exports Over Time', markers=True,
+                      color_discrete_map={'Import': '#DDA0DD', 'Export': '#FFA07A'})  # Light purple and light salmon
         fig.update_layout(paper_bgcolor="black", font_color="white", legend_font_color="white", title_font_color="white")
         st.plotly_chart(fig)
 
     elif chart_type == "Scatter":
-        st.write(f"### Scatter Plot - {selected_numeric_x} vs {selected_numeric_y}")
-        fig = px.scatter(df_uq, x=selected_numeric_x, y=selected_numeric_y, title=f'Scatter Plot of {selected_numeric_x} vs {selected_numeric_y}')
+        st.write("### Scatter Plot - Quantity vs Value")
+        fig = px.scatter(df_uq, x='Quantity', y='Value', color='Import_Export', 
+                         title='Scatter Plot of Quantity vs Value (Imports and Exports)',
+                         color_discrete_map={'Import': 'darkblue', 'Export': 'red'})
         fig.update_layout(paper_bgcolor="black", font_color="white", legend_font_color="white", title_font_color="white")
         st.plotly_chart(fig)
 
@@ -134,6 +125,7 @@ try:
         st.plotly_chart(fig)
 
     elif chart_type == "Heatmap":
+        selected_heatmap_vars = st.sidebar.multiselect('Select Numeric Variables for Heatmap', numeric_options, default=numeric_options)
         if selected_heatmap_vars:
             st.write("### Heatmap of Numeric Variables")
             correlation_matrix = df_uq[selected_heatmap_vars].corr()
@@ -149,6 +141,7 @@ try:
             st.plotly_chart(fig)
 
     elif chart_type == "Histogram":
+        selected_hist_var = st.sidebar.selectbox('Select Numeric Variable for Histogram', numeric_options)
         st.write(f"### Histogram - {selected_hist_var}")
         fig = px.histogram(df_uq, x=selected_hist_var, nbins=30, title=f'Histogram of {selected_hist_var}', marginal="box")
         fig.update_layout(paper_bgcolor="black", font_color="white", legend_font_color="white", title_font_color="white")
