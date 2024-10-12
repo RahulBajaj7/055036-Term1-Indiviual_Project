@@ -36,7 +36,7 @@ st.markdown(
 st.header("Import Export Dashboard")
 
 # Load the dataset into df_uq
-file_path = 'Imports_Exports_Dataset.csv'
+file_path = r'C:\Users\rahul\Downloads\Imports_Exports_Dataset.csv'
 
 try:
     df_uq = pd.read_csv(file_path)
@@ -86,13 +86,15 @@ try:
 
         # Bar Plot for Import/Export
         fig = px.bar(df_uq, x='Import_Export', color='Import_Export', title='Bar Plot of Import/Export',
-                     color_discrete_sequence=import_export_colors, barmode='group')
+                     color_discrete_sequence=import_export_colors, barmode='group',
+                     text='Quantity')  # Add text annotations for Quantity
         fig.update_layout(bargap=0.5, paper_bgcolor="black", font_color="white", legend_font_color="white", title_font_color="white")
         st.plotly_chart(fig)
 
         # Bar Plot for Payment Terms
         fig = px.bar(df_uq, x='Payment_Terms', color='Payment_Terms', title='Bar Plot of Payment Terms',
-                     color_discrete_sequence=payment_terms_colors, barmode='group')
+                     color_discrete_sequence=payment_terms_colors, barmode='group',
+                     text='Quantity')  # Add text annotations for Quantity
         fig.update_layout(bargap=0.15, paper_bgcolor="black", font_color="white", legend_font_color="white", title_font_color="white")
         st.plotly_chart(fig)
 
@@ -106,7 +108,8 @@ try:
         # Plotly line chart with specific colors
         fig = px.line(import_export_summary, x='Year', y='Quantity', color='Import_Export', 
                       title='Line Chart of Imports and Exports Over Time', markers=True,
-                      color_discrete_map={'Import': '#DDA0DD', 'Export': '#FFA07A'})  # Light purple and light salmon
+                      color_discrete_map={'Import': '#DDA0DD', 'Export': '#FFA07A'}, 
+                      text='Quantity')  # Add text annotations for Quantity
         fig.update_layout(paper_bgcolor="black", font_color="white", legend_font_color="white", title_font_color="white")
         st.plotly_chart(fig)
 
@@ -149,3 +152,4 @@ try:
 
 except FileNotFoundError:
     st.error(f"File '{file_path}' not found. Please upload the correct dataset.")
+
